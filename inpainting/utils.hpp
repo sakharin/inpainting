@@ -13,9 +13,9 @@
 #include <iostream>
 #include <cmath>
 
-typedef std::vector<std::vector<cv::Point>> contours_t;
-typedef std::vector<cv::Vec4i> hierarchy_t;
-typedef std::vector<cv::Point> contour_t;
+typedef std::vector< std::vector< cv::Point > > contours_t;
+typedef std::vector< cv::Vec4i > hierarchy_t;
+typedef std::vector< cv::Point > contour_t;
 
 
 // Patch raduius
