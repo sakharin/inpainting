@@ -12,6 +12,7 @@
 #include <string>
 #include <iostream>
 #include <cmath>
+#include "omp.h"
 
 typedef std::vector< std::vector< cv::Point > > contours_t;
 typedef std::vector< cv::Vec4i > hierarchy_t;
@@ -26,11 +27,11 @@ typedef std::vector< cv::Point > contour_t;
 int mod(int a, int b);
 
 void loadInpaintingImages(
-                          const std::string& colorFilename,
-                          const std::string& maskFilename,
-                          cv::Mat& colorMat,
-                          cv::Mat& maskMat,
-                          cv::Mat& grayMat);
+    const std::string& colorFilename,
+    const std::string& maskFilename,
+    cv::Mat& colorMat,
+    cv::Mat& maskMat,
+    cv::Mat& grayMat);
 
 void showMat(const cv::String& winname, const cv::Mat& mat, int time=5);
 
