@@ -1,11 +1,8 @@
 #ifndef utils_hpp
 #define utils_hpp
 
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
-
+#include <iostream>
 #include <assert.h>
-#include <stdio.h>
 
 #include <algorithm>
 #include <vector>
@@ -13,6 +10,10 @@
 #include <iostream>
 #include <cmath>
 #include "omp.h"
+
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 using namespace cv;
 using namespace std;

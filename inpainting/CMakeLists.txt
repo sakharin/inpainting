@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(inpainting)
+
 find_package(OpenCV REQUIRED)
+
 include(FindOpenMP)
 if(OPENMP_FOUND)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
