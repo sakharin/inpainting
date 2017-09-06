@@ -32,7 +32,7 @@ void loadInpaintingImages(
   assert(!colorMat.empty() && !maskMat.empty());
 
   // convert colorMat to depth CV_32F for colorspace conversions
-  colorMat.convertTo(colorMat, CV_32F);
+  colorMat.convertTo(colorMat, CV_32FC3);
   colorMat /= 255.0f;
 
   // add border around colorMat

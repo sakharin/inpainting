@@ -24,13 +24,14 @@
 
 int main (int argc, char** argv) {
   // --------------- read filename strings ------------------
-  std::string colorFilename, maskFilename;
+  std::string colorFilename, maskFilename, outputFilename;
 
-  if (argc == 3) {
+  if (argc == 4) {
     colorFilename = argv[1];
     maskFilename = argv[2];
+    outputFilename = argv[3];
   } else {
-    std::cerr << "Usage: ./inpainting colorImageFile maskImageFile" << std::endl;
+    std::cerr << "Usage: ./inpainting colorImageFile maskImageFile outputImageFile" << std::endl;
     return -1;
   }
 
@@ -167,6 +168,9 @@ int main (int argc, char** argv) {
   }
 
   std::cout << std::endl << "done" << std::endl;
-  showMat("final result", colorMat, 0);
+  showMat("final result", colorMat, 1);
+  cv::Mat out = colorMat.clone() * 255;
+  out.convertTo(out, CV_8UC3);
+  cv::imwrite(outputFilename, out);
   return 0;
 }
