@@ -3,6 +3,9 @@ project(inpainting)
 
 find_package(OpenCV REQUIRED)
 
+FIND_PACKAGE(CUDA REQUIRED)
+INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
+
 include(FindOpenMP)
 if(OPENMP_FOUND)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -17,6 +20,9 @@ set(inpainting_VERSION_MINOR 0)
 add_library(utils STATIC utils.cpp)
 target_link_libraries(utils ${OpenCV_LIBS})
 
+add_library(Inpainting STATIC Inpainting.cpp)
+target_link_libraries(Inpainting ${OpenCV_LIBS})
+
 add_executable(main main.cpp)
-target_link_libraries(main utils)
+target_link_libraries(main Inpainting)
 target_link_libraries(main ${OpenCV_LIBS})
