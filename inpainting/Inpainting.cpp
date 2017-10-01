@@ -181,7 +181,8 @@ Mat Inpainting::computeSSD(const Mat& tmplate, const Mat& source, const Mat& tmp
   Mat result(source.rows - tmplate.rows + 1, source.cols - tmplate.cols + 1, CV_32F, 0.0f);
 
   // TODO Accelerate this by using GPU
-  matchTemplate(source, tmplate, result, CV_TM_SQDIFF, tmplate_mask);
+  //matchTemplate(source, tmplate, result, CV_TM_SQDIFF, tmplate_mask);
+  gpu_matchTemplate(source, tmplate, result, CV_TM_SQDIFF, tmplate_mask);
   normalize(result, result, 0, 1, NORM_MINMAX);
   copyMakeBorder(result, result,
       RADIUS, RADIUS, RADIUS, RADIUS,
@@ -270,7 +271,7 @@ Mat Inpainting::inpaint() {
     // from SSD
     result.setTo(1.1f, eroded_mask == 0);
     // get minimum point of SSD between psiHatPColor and colorMat
-    minMaxLoc(result, NULL, NULL, &psiHatQ);
+    cuda::minMaxLoc(result, NULL, NULL, &psiHatQ, NULL);
 
     assert(psiHatQ != psiHatP);
 

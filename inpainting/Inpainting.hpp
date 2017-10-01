@@ -1,14 +1,8 @@
 #ifndef __INPAINTING_H__
 #define __INPAINTING_H__
-#include <iostream>
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
+#include "gpu_matchTemplate.hpp"
 #include "omp.h"
-
-using namespace cv;
-using namespace std;
 
 typedef vector< vector< Point > > contours_t;
 typedef vector< Vec4i > hierarchy_t;

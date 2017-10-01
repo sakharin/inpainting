@@ -20,7 +20,11 @@ set(inpainting_VERSION_MINOR 0)
 add_library(utils STATIC utils.cpp)
 target_link_libraries(utils ${OpenCV_LIBS})
 
+CUDA_ADD_LIBRARY(gpu_matchTemplate cuda/gpu_matchTemplate.cu)
+target_link_libraries(gpu_matchTemplate ${OpenCV_LIBS})
+
 add_library(Inpainting STATIC Inpainting.cpp)
+target_link_libraries(Inpainting gpu_matchTemplate)
 target_link_libraries(Inpainting ${OpenCV_LIBS})
 
 add_executable(main main.cpp)
