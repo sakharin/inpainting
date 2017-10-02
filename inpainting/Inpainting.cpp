@@ -127,7 +127,7 @@ Mat Inpainting::getPatch(const Mat& mat, const Point& p) {
 }
 
 void Inpainting::computePriority(const contours_t& contours, const Mat& gray_mat,
-    const Mat& confidence_mat, Mat& priority_mat) {
+    const Mat& confidence_mat, Mat& priority_mat, Point last_point) {
   // get the derivatives and magnitude of the greyscale image
   Mat dx, dy, magn;
   Sobel(gray_mat, dx, -1, 1, 0, -1);
@@ -139,50 +139,57 @@ void Inpainting::computePriority(const contours_t& contours, const Mat& gray_mat
   magn.copyTo(masked_magnitude, (confidence_mat != 0.0f));
   erode(masked_magnitude, masked_magnitude, Mat());
 
+  bool is_update = true;
+  if (last_point.x == -1 && last_point.y == -1)
+    is_update = false;
 #pragma omp parallel
   {
 #pragma omp for schedule(dynamic)
-  for (int i = 0; i < contours.size(); ++i)
-  {
-    contour_t contour = contours[i];
-
-    for (int j = 0; j < contour.size(); ++j)
+    for (int i = 0; i < contours.size(); ++i)
     {
+      contour_t contour = contours[i];
 
-      Point point = contour[j];
+      for (int j = 0; j < contour.size(); ++j)
+      {
 
-      Mat confidence_patch = getPatch(confidence_mat, point);
+        Point point = contour[j];
+        if (!is_update ||
+            (abs(point.x - last_point.x) < 2 * RADIUS &&
+            abs(point.y - last_point.y) < 2 * RADIUS)) {
 
-      // get confidence of patch
-      double confidence = sum(confidence_patch)[0] / (double) confidence_patch.total();
-      assert(0 <= confidence && confidence <= 1.0f);
+          Mat confidence_patch = getPatch(confidence_mat, point);
 
-      // get the normal to the border around point
-      Point2f normal = getNormal(contour, point);
+          // get confidence of patch
+          double confidence = sum(confidence_patch)[0] / (double) confidence_patch.total();
+          assert(0 <= confidence && confidence <= 1.0f);
 
-      // get the maximum gradient in source around patch
-      Mat magnitude_patch = getPatch(masked_magnitude, point);
-      Point max_point;
-      minMaxLoc(magnitude_patch, NULL, NULL, NULL, &max_point);
-      Point2f gradient = Point2f(
-          -getPatch(dy, point).ptr<float>(max_point.y)[max_point.x],
-          getPatch(dx, point).ptr<float>(max_point.y)[max_point.x]
-          );
+          // get the normal to the border around point
+          Point2f normal = getNormal(contour, point);
 
-      // set the priority in priorityMat
-      priority_mat.ptr<float>(point.y)[point.x] = abs((float) confidence * gradient.dot(normal));
-      assert(priority_mat.ptr<float>(point.y)[point.x] >= 0);
+          // get the maximum gradient in source around patch
+          Mat magnitude_patch = getPatch(masked_magnitude, point);
+          Point max_point;
+          minMaxLoc(magnitude_patch, NULL, NULL, NULL, &max_point);
+          Point2f gradient = Point2f(
+              -getPatch(dy, point).ptr<float>(max_point.y)[max_point.x],
+              getPatch(dx, point).ptr<float>(max_point.y)[max_point.x]
+              );
+
+          // set the priority in priorityMat
+          priority_mat.ptr<float>(point.y)[point.x] = abs((float) confidence * gradient.dot(normal));
+          assert(priority_mat.ptr<float>(point.y)[point.x] >= 0);
+        }
+      }
     }
-  }
   }
 }
 
 Mat Inpainting::computeSSD(const Mat& tmplate, const Mat& source, const Mat& tmplate_mask) {
   Mat result(source.rows - tmplate.rows + 1, source.cols - tmplate.cols + 1, CV_32F, 0.0f);
 
-  // TODO Accelerate this by using GPU
   //matchTemplate(source, tmplate, result, CV_TM_SQDIFF, tmplate_mask);
   gpu_matchTemplate(source, tmplate, result, CV_TM_SQDIFF, tmplate_mask);
+
   normalize(result, result, 0, 1, NORM_MINMAX);
   copyMakeBorder(result, result,
       RADIUS, RADIUS, RADIUS, RADIUS,
@@ -218,7 +225,7 @@ Mat Inpainting::inpaint() {
   contours_t contours;
   hierarchy_t hierarchy;
 
-  Point psiHatP; // psiHatP - point of highest confidence
+  Point psiHatP(-1, -1); // psiHatP - point of highest confidence
   Mat psiHatPColor; // color patch around psiHatP
   Mat psiHatPConfidence; // confidence patch around psiHatP
 
@@ -237,12 +244,9 @@ Mat Inpainting::inpaint() {
 
   // main loop
   const size_t area = mask_mat_.total();
-
+  priority_mat.setTo(-0.1f);
   while (countNonZero(mask_mat_) != area) // end when target is filled
   {
-    // set priority matrix to -.1, lower than 0 so that border area is never selected
-    priority_mat.setTo(-0.1f);
-
     // get the contours of mask
     getContours((mask_mat_ == 0), contours, hierarchy);
     Mat img_contour = Mat::zeros(color_mat_.size(), CV_8UC3);
@@ -252,12 +256,15 @@ Mat Inpainting::inpaint() {
     imshow("Bg2:, contour", img_contour);
 
     // compute the priority for all contour points
-    computePriority(contours, gray_mat_, confidence_mat, priority_mat);
+    computePriority(contours, gray_mat_, confidence_mat, priority_mat, psiHatP);
 
     // get the patch with the greatest priority
     minMaxLoc(priority_mat, NULL, NULL, NULL, &psiHatP);
     psiHatPColor = getPatch(color_mat_, psiHatP);
     psiHatPConfidence = getPatch(confidence_mat, psiHatP);
+
+    // update priority_mat
+    getPatch(priority_mat, psiHatP) = -0.1f;
 
     Mat conf_inv = (psiHatPConfidence != 0.0f);
     conf_inv.convertTo(conf_inv, CV_32F);

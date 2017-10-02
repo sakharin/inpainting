@@ -1,8 +1,15 @@
 #ifndef __INPAINTING_H__
 #define __INPAINTING_H__
+#include <iostream>
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 #include "gpu_matchTemplate.hpp"
 #include "omp.h"
+
+using namespace cv;
+using namespace std;
 
 typedef vector< vector< Point > > contours_t;
 typedef vector< Vec4i > hierarchy_t;
@@ -21,9 +28,11 @@ class Inpainting {
   Point2f getNormal(const contour_t& contour, const Point& point);
   Mat getPatch(const Mat& mat, const Point& p);
   void computePriority(const contours_t& contours,
-      const Mat& gray_mat, const Mat& confidence_mat, Mat& priority_mat);
+      const Mat& gray_mat, const Mat& confidence_mat,
+      Mat& priority_mat, Point last_point);
   Mat computeSSD(const Mat& tmplate, const Mat& source, const Mat& tmplate_mask);
-  void transferPatch(const Point& psiHatQ, const Point& psiHatP, const Mat& src_mat, Mat& dst_mat, const Mat& mask_mat);
+  void transferPatch(const Point& psiHatQ, const Point& psiHatP,
+      const Mat& src_mat, Mat& dst_mat, const Mat& mask_mat);
   double computeConfidence(const Mat& confidence_patch);
  public:
   Inpainting(string color_file_name,
