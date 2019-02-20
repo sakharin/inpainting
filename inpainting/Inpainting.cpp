@@ -6,7 +6,7 @@
 Inpainting::Inpainting(string color_file_name,
     string mask_file_name,
     string texture_file_name) {
-
+  std::cout << color_file_name << mask_file_name;
   // Check inputs
   assert(color_file_name.length() && mask_file_name.length());
 
@@ -15,6 +15,8 @@ Inpainting::Inpainting(string color_file_name,
   texture_mat_ = imread(texture_file_name, CV_LOAD_IMAGE_COLOR);
 
   assert(color_mat_.size() == mask_mat_.size());
+std:: cout << color_mat_.size() << mask_mat_.size();
+std:: cout << color_mat_.empty() << mask_mat_.empty();
   assert(!color_mat_.empty() && !mask_mat_.empty());
 
   // Convert color_mat_ to depth CV_32F for colorspace conversions
@@ -294,8 +296,8 @@ Mat Inpainting::inpaint() {
     psiHatPConfidence.setTo(confidence, (psiHatPConfidence == 0.0f));
     // update maskMat
     mask_mat_ = (confidence_mat != 0.0f);
-    imshow("Bg1", color_mat_);
-    waitKey(1);
+    //imshow("Bg1", color_mat_);
+    //waitKey(1);
     cout << area - countNonZero(mask_mat_) << " remaining pixels.\r" << flush;
   }
 
